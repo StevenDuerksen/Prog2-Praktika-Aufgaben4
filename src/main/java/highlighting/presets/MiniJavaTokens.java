@@ -24,17 +24,19 @@ public final class MiniJavaTokens {
         // annotations, comments, identifiers, numbers, operators, etc.
 
         // One character between ' and '
-        Token.of(Pattern.compile("'.'"), MiniJavaColours.CHAR_LITERAL_COLOUR),
+        Token.of(Pattern.compile("'(?:\\\\.|[^'\\\\\\r\\n])'"), MiniJavaColours.CHAR_LITERAL_COLOUR),
         // Keywords not as part of other identifiers or comments only from group 2
-        Token.of(Pattern.compile("//[^\\r\\n]*|(\\b(?:package|import|class|public|private|final|return|null|new)\\b)"), MiniJavaColours.KEYWORD_COLOUR),
+        Token.of(Pattern.compile("\\b(package|import|class|public|private|final|return|null|new|if|else|this)\\b"), MiniJavaColours.KEYWORD_COLOUR),
         // Annotation beginning with @ followed by letters or minus
-        Token.of(Pattern.compile(""), MiniJavaColours.ANNOTATION_COLOUR),
+        Token.of(Pattern.compile("@[\\w-]+"), MiniJavaColours.ANNOTATION_COLOUR),
         // Single-line comments
         Token.of(Pattern.compile("//[^\\r\\n]*"), MiniJavaColours.LINE_COMMENT_COLOUR),
         // Multi-line comments
-        Token.of(Pattern.compile(""), MiniJavaColours.BLOCK_COMMENT_COLOUR),
+        Token.of(Pattern.compile("/\\*(.|[\\r\\n])*?\\*/"), MiniJavaColours.BLOCK_COMMENT_COLOUR),
         // Javadoc comments
-        Token.of(Pattern.compile(""), MiniJavaColours.JAVADOC_COMMENT_COLOUR)
+        Token.of(Pattern.compile("/\\*\\*[\\s\\S]*?\\*/"), MiniJavaColours.JAVADOC_COMMENT_COLOUR),
+        // Match every other character
+        Token.of(Pattern.compile("(?s)(?<=\\G.)."), MiniJavaColours.FUNNY_STUFF_HIHI)
         // TODO: More Patterns
         );
   }
