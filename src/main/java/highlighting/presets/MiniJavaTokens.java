@@ -24,9 +24,13 @@ public final class MiniJavaTokens {
         // annotations, comments, identifiers, numbers, operators, etc.
 
         // One character between ' and '
-        Token.of(Pattern.compile("'(?:\\\\.|[^'\\\\\\r\\n])'"), MiniJavaColours.CHAR_LITERAL_COLOUR),
+        Token.of(
+            Pattern.compile("'(?:\\\\.|[^'\\\\\\r\\n])'"), MiniJavaColours.CHAR_LITERAL_COLOUR),
         // Keywords not as part of other identifiers or comments only from group 2
-        Token.of(Pattern.compile("\\b(package|import|class|public|private|final|return|null|new|if|else|this)\\b"), MiniJavaColours.KEYWORD_COLOUR),
+        Token.of(
+            Pattern.compile(
+                "\\b(package|import|class|public|private|final|return|null|new|if|else|this)\\b"),
+            MiniJavaColours.KEYWORD_COLOUR),
         // Annotation beginning with @ followed by letters or minus
         Token.of(Pattern.compile("@[\\w-]+"), MiniJavaColours.ANNOTATION_COLOUR),
         // Single-line comments

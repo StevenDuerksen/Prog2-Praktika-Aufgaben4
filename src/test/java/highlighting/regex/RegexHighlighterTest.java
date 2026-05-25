@@ -1,16 +1,14 @@
 package highlighting.regex;
 
-import org.junit.jupiter.api.Test;
-
 import static org.junit.jupiter.api.Assertions.*;
+
+import org.junit.jupiter.api.Test;
 
 class RegexHighlighterTest {
 
-    @Test
-    void collectMatches() {
-    }
+  @Test
+  void collectMatches() {}
 
-    @Test
-    void resolveConflicts() {
-    }
+  @Test
+  void resolveConflicts() {}
 }
