@@ -19,10 +19,27 @@ public final class MiniJavaTokens {
   public static List<Token> defaultTokens() {
     return List.of(
         // Example: string literals (students should define further tokens below)
-        Token.of(Pattern.compile("\"([^\"\\\\]|\\\\.)*\""), MiniJavaColours.STRING_LITERAL_COLOUR)
-
-        // TODO: Define additional tokens for MiniJava, e.g. character literals, keywords,
-        // annotations, comments, identifiers, numbers, operators, etc.
+        Token.of(Pattern.compile("\"([^\"\\\\]|\\\\.)*\""), MiniJavaColours.STRING_LITERAL_COLOUR),
+        // One character between ' and '
+        Token.of(
+            Pattern.compile("'(?:\\\\.|[^'\\\\\\r\\n])'"), MiniJavaColours.CHAR_LITERAL_COLOUR),
+        // Keywords not as part of other identifiers or comments
+        Token.of(
+            Pattern.compile(
+                "\\b(package|import|class|public|private|final|return|null|new|if|else|this)\\b"),
+            MiniJavaColours.KEYWORD_COLOUR),
+        // Annotation beginning with @ followed by letters or minus
+        Token.of(Pattern.compile("@[\\w-]+"), MiniJavaColours.ANNOTATION_COLOUR),
+        // Single-line comments
+        Token.of(Pattern.compile("//[^\\r\\n]*"), MiniJavaColours.LINE_COMMENT_COLOUR),
+        // Multi-line comments
+        Token.of(
+            Pattern.compile("/\\*(?!\\*)[\\s\\S]*?\\*/"), MiniJavaColours.BLOCK_COMMENT_COLOUR),
+        // Javadoc comments
+        Token.of(Pattern.compile("/\\*\\*[\\s\\S]*?\\*/"), MiniJavaColours.JAVADOC_COMMENT_COLOUR),
+        // Match every other character
+        Token.of(Pattern.compile("(?s)(?<=\\G.)."), MiniJavaColours.FUNNY_STUFF_HIHI)
+        // TODO: More Patterns
         );
   }
 }
