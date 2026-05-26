@@ -12,328 +12,331 @@ import org.junit.jupiter.api.Test;
 
 class MiniJavaTokensTest {
 
-    private Token tokenByColour(Color colour) {
-        return MiniJavaTokens.defaultTokens().stream()
-            .filter(token -> token.colour().equals(colour))
-            .findFirst()
-            .orElseThrow();
+  private Token tokenByColour(Color colour) {
+    return MiniJavaTokens.defaultTokens().stream()
+        .filter(token -> token.colour().equals(colour))
+        .findFirst()
+        .orElseThrow();
+  }
+
+  private List<String> matches(Token token, String text) {
+    List<String> result = new ArrayList<>();
+    Matcher matcher = token.pattern().matcher(text);
+
+    while (matcher.find()) {
+      result.add(matcher.group(token.matchingGroup()));
     }
 
-    private List<String> matches(Token token, String text) {
-        List<String> result = new ArrayList<>();
-        Matcher matcher = token.pattern().matcher(text);
+    return result;
+  }
 
-        while (matcher.find()) {
-            result.add(matcher.group(token.matchingGroup()));
-        }
+  @Test
+  void stringLiteralMatchesAtStartMiddleAndEnd() {
+    // Given
+    Token token = tokenByColour(MiniJavaColours.STRING_LITERAL_COLOUR);
+    String text = "\"start\" String text = \"middle\"; return \"end\"";
 
-        return result;
-    }
+    // When
+    List<String> result = matches(token, text);
 
-    @Test
-    void stringLiteralMatchesAtStartMiddleAndEnd() {
-        // Given
-        Token token = tokenByColour(MiniJavaColours.STRING_LITERAL_COLOUR);
-        String text = "\"start\" String text = \"middle\"; return \"end\"";
+    // Then
+    assertEquals(List.of("\"start\"", "\"middle\"", "\"end\""), result);
+  }
 
-        // When
-        List<String> result = matches(token, text);
+  @Test
+  void stringLiteralCanContainCommentMarkers() {
+    // Given
+    Token token = tokenByColour(MiniJavaColours.STRING_LITERAL_COLOUR);
+    String text = "String text = \"this is not // a comment and not /* a block comment */\";";
 
-        // Then
-        assertEquals(List.of("\"start\"", "\"middle\"", "\"end\""), result);
-    }
+    // When
+    List<String> result = matches(token, text);
 
-    @Test
-    void stringLiteralCanContainCommentMarkers() {
-        // Given
-        Token token = tokenByColour(MiniJavaColours.STRING_LITERAL_COLOUR);
-        String text = "String text = \"this is not // a comment and not /* a block comment */\";";
+    // Then
+    assertEquals(List.of("\"this is not // a comment and not /* a block comment */\""), result);
+  }
 
-        // When
-        List<String> result = matches(token, text);
+  @Test
+  void stringLiteralDoesNotMatchUnclosedString() {
+    // Given
+    Token token = tokenByColour(MiniJavaColours.STRING_LITERAL_COLOUR);
+    String text = "String text = \"not closed;";
 
-        // Then
-        assertEquals(
-            List.of("\"this is not // a comment and not /* a block comment */\""),
-            result);
-    }
+    // When
+    List<String> result = matches(token, text);
 
-    @Test
-    void stringLiteralDoesNotMatchUnclosedString() {
-        // Given
-        Token token = tokenByColour(MiniJavaColours.STRING_LITERAL_COLOUR);
-        String text = "String text = \"not closed;";
+    // Then
+    assertTrue(result.isEmpty());
+  }
 
-        // When
-        List<String> result = matches(token, text);
+  @Test
+  void charLiteralMatchesAtStartMiddleAndEnd() {
+    // Given
+    Token token = tokenByColour(MiniJavaColours.CHAR_LITERAL_COLOUR);
+    String text = "'a' char middle = 'b'; char end = '\\n'";
 
-        // Then
-        assertTrue(result.isEmpty());
-    }
+    // When
+    List<String> result = matches(token, text);
 
-    @Test
-    void charLiteralMatchesAtStartMiddleAndEnd() {
-        // Given
-        Token token = tokenByColour(MiniJavaColours.CHAR_LITERAL_COLOUR);
-        String text = "'a' char middle = 'b'; char end = '\\n'";
+    // Then
+    assertEquals(List.of("'a'", "'b'", "'\\n'"), result);
+  }
 
-        // When
-        List<String> result = matches(token, text);
+  @Test
+  void charLiteralDoesNotMatchInvalidCharLiterals() {
+    // Given
+    Token token = tokenByColour(MiniJavaColours.CHAR_LITERAL_COLOUR);
+    String text = "char invalidOne = 'ab'; char invalidTwo = '';";
 
-        // Then
-        assertEquals(List.of("'a'", "'b'", "'\\n'"), result);
-    }
+    // When
+    List<String> result = matches(token, text);
 
-    @Test
-    void charLiteralDoesNotMatchInvalidCharLiterals() {
-        // Given
-        Token token = tokenByColour(MiniJavaColours.CHAR_LITERAL_COLOUR);
-        String text = "char invalidOne = 'ab'; char invalidTwo = '';";
+    // Then
+    assertTrue(result.isEmpty());
+  }
 
-        // When
-        List<String> result = matches(token, text);
+  @Test
+  void keywordMatchesAtStartMiddleAndEnd() {
+    // Given
+    Token token = tokenByColour(MiniJavaColours.KEYWORD_COLOUR);
+    String text = "package demo; public class Test { return null";
 
-        // Then
-        assertTrue(result.isEmpty());
-    }
+    // When
+    List<String> result = matches(token, text);
 
-    @Test
-    void keywordMatchesAtStartMiddleAndEnd() {
-        // Given
-        Token token = tokenByColour(MiniJavaColours.KEYWORD_COLOUR);
-        String text = "package demo; public class Test { return null";
+    // Then
+    assertEquals(List.of("package", "public", "class", "return", "null"), result);
+  }
 
-        // When
-        List<String> result = matches(token, text);
+  @Test
+  void keywordMatchesMultipleKeywordsInSameText() {
+    // Given
+    Token token = tokenByColour(MiniJavaColours.KEYWORD_COLOUR);
+    String text =
+        "private final Object value = new Object(); if (this != null) return value; else return"
+            + " null;";
 
-        // Then
-        assertEquals(List.of("package", "public", "class", "return", "null"), result);
-    }
+    // When
+    List<String> result = matches(token, text);
 
-    @Test
-    void keywordMatchesMultipleKeywordsInSameText() {
-        // Given
-        Token token = tokenByColour(MiniJavaColours.KEYWORD_COLOUR);
-        String text = "private final Object value = new Object(); if (this != null) return value; else return null;";
+    // Then
+    assertEquals(
+        List.of(
+            "private", "final", "new", "if", "this", "null", "return", "else", "return", "null"),
+        result);
+  }
 
-        // When
-        List<String> result = matches(token, text);
+  @Test
+  void keywordDoesNotMatchInsideOtherIdentifiers() {
+    // Given
+    Token token = tokenByColour(MiniJavaColours.KEYWORD_COLOUR);
+    String text =
+        "packageName imported myclass publicValue privateField finally returnValue nullable newest";
 
-        // Then
-        assertEquals(
-            List.of("private", "final", "new", "if", "this", "null", "return", "else", "return", "null"),
-            result);
-    }
+    // When
+    List<String> result = matches(token, text);
 
-    @Test
-    void keywordDoesNotMatchInsideOtherIdentifiers() {
-        // Given
-        Token token = tokenByColour(MiniJavaColours.KEYWORD_COLOUR);
-        String text = "packageName imported myclass publicValue privateField finally returnValue nullable newest";
+    // Then
+    assertTrue(result.isEmpty());
+  }
 
-        // When
-        List<String> result = matches(token, text);
+  @Test
+  void annotationMatchesAtLineStartWithWhitespaceAndInMiddle() {
+    // Given
+    Token token = tokenByColour(MiniJavaColours.ANNOTATION_COLOUR);
+    String text = "@Override\n    @Deprecated\nclass Test { @Test void method() {} }";
 
-        // Then
-        assertTrue(result.isEmpty());
-    }
+    // When
+    List<String> result = matches(token, text);
 
-    @Test
-    void annotationMatchesAtLineStartWithWhitespaceAndInMiddle() {
-        // Given
-        Token token = tokenByColour(MiniJavaColours.ANNOTATION_COLOUR);
-        String text = "@Override\n    @Deprecated\nclass Test { @Test void method() {} }";
+    // Then
+    assertEquals(List.of("@Override", "@Deprecated", "@Test"), result);
+  }
 
-        // When
-        List<String> result = matches(token, text);
+  @Test
+  void annotationDoesNotMatchWithoutAtSign() {
+    // Given
+    Token token = tokenByColour(MiniJavaColours.ANNOTATION_COLOUR);
+    String text = "Override Deprecated Test";
 
-        // Then
-        assertEquals(List.of("@Override", "@Deprecated", "@Test"), result);
-    }
+    // When
+    List<String> result = matches(token, text);
 
-    @Test
-    void annotationDoesNotMatchWithoutAtSign() {
-        // Given
-        Token token = tokenByColour(MiniJavaColours.ANNOTATION_COLOUR);
-        String text = "Override Deprecated Test";
+    // Then
+    assertTrue(result.isEmpty());
+  }
 
-        // When
-        List<String> result = matches(token, text);
+  @Test
+  void lineCommentMatchesAtStartMiddleAndEnd() {
+    // Given
+    Token token = tokenByColour(MiniJavaColours.LINE_COMMENT_COLOUR);
+    String text = "// start\nint value = 1; // middle\nreturn value; // end";
 
-        // Then
-        assertTrue(result.isEmpty());
-    }
+    // When
+    List<String> result = matches(token, text);
 
-    @Test
-    void lineCommentMatchesAtStartMiddleAndEnd() {
-        // Given
-        Token token = tokenByColour(MiniJavaColours.LINE_COMMENT_COLOUR);
-        String text = "// start\nint value = 1; // middle\nreturn value; // end";
+    // Then
+    assertEquals(List.of("// start", "// middle", "// end"), result);
+  }
 
-        // When
-        List<String> result = matches(token, text);
+  @Test
+  void lineCommentCanContainKeywordLikeText() {
+    // Given
+    Token token = tokenByColour(MiniJavaColours.LINE_COMMENT_COLOUR);
+    String text = "// public class return null new private final";
 
-        // Then
-        assertEquals(List.of("// start", "// middle", "// end"), result);
-    }
+    // When
+    List<String> result = matches(token, text);
 
-    @Test
-    void lineCommentCanContainKeywordLikeText() {
-        // Given
-        Token token = tokenByColour(MiniJavaColours.LINE_COMMENT_COLOUR);
-        String text = "// public class return null new private final";
+    // Then
+    assertEquals(List.of("// public class return null new private final"), result);
+  }
 
-        // When
-        List<String> result = matches(token, text);
+  @Test
+  void lineCommentDoesNotMatchNormalCode() {
+    // Given
+    Token token = tokenByColour(MiniJavaColours.LINE_COMMENT_COLOUR);
+    String text = "public class Test { return null; }";
 
-        // Then
-        assertEquals(List.of("// public class return null new private final"), result);
-    }
+    // When
+    List<String> result = matches(token, text);
 
-    @Test
-    void lineCommentDoesNotMatchNormalCode() {
-        // Given
-        Token token = tokenByColour(MiniJavaColours.LINE_COMMENT_COLOUR);
-        String text = "public class Test { return null; }";
+    // Then
+    assertTrue(result.isEmpty());
+  }
 
-        // When
-        List<String> result = matches(token, text);
+  @Test
+  void blockCommentMatchesAtStartMiddleAndEnd() {
+    // Given
+    Token token = tokenByColour(MiniJavaColours.BLOCK_COMMENT_COLOUR);
+    String text = "/* start */ int value = 1; /* middle */ return value; /* end */";
 
-        // Then
-        assertTrue(result.isEmpty());
-    }
+    // When
+    List<String> result = matches(token, text);
 
-    @Test
-    void blockCommentMatchesAtStartMiddleAndEnd() {
-        // Given
-        Token token = tokenByColour(MiniJavaColours.BLOCK_COMMENT_COLOUR);
-        String text = "/* start */ int value = 1; /* middle */ return value; /* end */";
+    // Then
+    assertEquals(List.of("/* start */", "/* middle */", "/* end */"), result);
+  }
 
-        // When
-        List<String> result = matches(token, text);
+  @Test
+  void blockCommentCanContainKeywordLikeText() {
+    // Given
+    Token token = tokenByColour(MiniJavaColours.BLOCK_COMMENT_COLOUR);
+    String text = "/* public class return null new private final */";
 
-        // Then
-        assertEquals(List.of("/* start */", "/* middle */", "/* end */"), result);
-    }
+    // When
+    List<String> result = matches(token, text);
 
-    @Test
-    void blockCommentCanContainKeywordLikeText() {
-        // Given
-        Token token = tokenByColour(MiniJavaColours.BLOCK_COMMENT_COLOUR);
-        String text = "/* public class return null new private final */";
+    // Then
+    assertEquals(List.of("/* public class return null new private final */"), result);
+  }
 
-        // When
-        List<String> result = matches(token, text);
+  @Test
+  void blockCommentDoesNotConsumeMultipleCommentsAtOnce() {
+    // Given
+    Token token = tokenByColour(MiniJavaColours.BLOCK_COMMENT_COLOUR);
+    String text = "/* first */ int value = 1; /* second */";
 
-        // Then
-        assertEquals(List.of("/* public class return null new private final */"), result);
-    }
+    // When
+    List<String> result = matches(token, text);
 
-    @Test
-    void blockCommentDoesNotConsumeMultipleCommentsAtOnce() {
-        // Given
-        Token token = tokenByColour(MiniJavaColours.BLOCK_COMMENT_COLOUR);
-        String text = "/* first */ int value = 1; /* second */";
+    // Then
+    assertEquals(List.of("/* first */", "/* second */"), result);
+  }
 
-        // When
-        List<String> result = matches(token, text);
+  @Test
+  void blockCommentDoesNotMatchUnclosedComment() {
+    // Given
+    Token token = tokenByColour(MiniJavaColours.BLOCK_COMMENT_COLOUR);
+    String text = "/* not closed";
 
-        // Then
-        assertEquals(List.of("/* first */", "/* second */"), result);
-    }
+    // When
+    List<String> result = matches(token, text);
 
-    @Test
-    void blockCommentDoesNotMatchUnclosedComment() {
-        // Given
-        Token token = tokenByColour(MiniJavaColours.BLOCK_COMMENT_COLOUR);
-        String text = "/* not closed";
+    // Then
+    assertTrue(result.isEmpty());
+  }
 
-        // When
-        List<String> result = matches(token, text);
+  @Test
+  void javadocCommentMatchesAtStartMiddleAndEnd() {
+    // Given
+    Token token = tokenByColour(MiniJavaColours.JAVADOC_COMMENT_COLOUR);
+    String text = "/** start */ class Test { /** middle */ void method() {} } /** end */";
 
-        // Then
-        assertTrue(result.isEmpty());
-    }
+    // When
+    List<String> result = matches(token, text);
 
-    @Test
-    void javadocCommentMatchesAtStartMiddleAndEnd() {
-        // Given
-        Token token = tokenByColour(MiniJavaColours.JAVADOC_COMMENT_COLOUR);
-        String text = "/** start */ class Test { /** middle */ void method() {} } /** end */";
+    // Then
+    assertEquals(List.of("/** start */", "/** middle */", "/** end */"), result);
+  }
 
-        // When
-        List<String> result = matches(token, text);
-
-        // Then
-        assertEquals(List.of("/** start */", "/** middle */", "/** end */"), result);
-    }
-
-    @Test
-    void javadocCommentCanContainKeywordLikeText() {
-        // Given
-        Token token = tokenByColour(MiniJavaColours.JAVADOC_COMMENT_COLOUR);
-        String text = """
+  @Test
+  void javadocCommentCanContainKeywordLikeText() {
+    // Given
+    Token token = tokenByColour(MiniJavaColours.JAVADOC_COMMENT_COLOUR);
+    String text =
+        """
         /**
          * public class return null new private final
          */
         """;
 
-        // When
-        List<String> result = matches(token, text);
+    // When
+    List<String> result = matches(token, text);
 
-        // Then
-        assertEquals(List.of(text.stripTrailing()), result);
-    }
+    // Then
+    assertEquals(List.of(text.stripTrailing()), result);
+  }
 
-    @Test
-    void javadocCommentDoesNotMatchNormalCode() {
-        // Given
-        Token token = tokenByColour(MiniJavaColours.JAVADOC_COMMENT_COLOUR);
-        String text = "public class Test { return null; }";
+  @Test
+  void javadocCommentDoesNotMatchNormalCode() {
+    // Given
+    Token token = tokenByColour(MiniJavaColours.JAVADOC_COMMENT_COLOUR);
+    String text = "public class Test { return null; }";
 
-        // When
-        List<String> result = matches(token, text);
+    // When
+    List<String> result = matches(token, text);
 
-        // Then
-        assertTrue(result.isEmpty());
-    }
+    // Then
+    assertTrue(result.isEmpty());
+  }
 
-    @Test
-    void funnyStuffMatchesEverySecondCharacter() {
-        // Given
-        Token token = tokenByColour(MiniJavaColours.FUNNY_STUFF_HIHI);
-        String text = "123456";
+  @Test
+  void funnyStuffMatchesEverySecondCharacter() {
+    // Given
+    Token token = tokenByColour(MiniJavaColours.FUNNY_STUFF_HIHI);
+    String text = "123456";
 
-        // When
-        List<String> result = matches(token, text);
+    // When
+    List<String> result = matches(token, text);
 
-        // Then
-        assertEquals(List.of("2", "4", "6"), result);
-    }
+    // Then
+    assertEquals(List.of("2", "4", "6"), result);
+  }
 
-    @Test
-    void funnyStuffWorksAcrossWholeTextIncludingLineBreaks() {
-        // Given
-        Token token = tokenByColour(MiniJavaColours.FUNNY_STUFF_HIHI);
-        String text = "12\n34";
+  @Test
+  void funnyStuffWorksAcrossWholeTextIncludingLineBreaks() {
+    // Given
+    Token token = tokenByColour(MiniJavaColours.FUNNY_STUFF_HIHI);
+    String text = "12\n34";
 
-        // When
-        List<String> result = matches(token, text);
+    // When
+    List<String> result = matches(token, text);
 
-        // Then
-        assertEquals(List.of("2", "3"), result);
-    }
+    // Then
+    assertEquals(List.of("2", "3"), result);
+  }
 
-    @Test
-    void funnyStuffDoesNotMatchSingleCharacterText() {
-        // Given
-        Token token = tokenByColour(MiniJavaColours.FUNNY_STUFF_HIHI);
-        String text = "1";
+  @Test
+  void funnyStuffDoesNotMatchSingleCharacterText() {
+    // Given
+    Token token = tokenByColour(MiniJavaColours.FUNNY_STUFF_HIHI);
+    String text = "1";
 
-        // When
-        List<String> result = matches(token, text);
+    // When
+    List<String> result = matches(token, text);
 
-        // Then
-        assertTrue(result.isEmpty());
-    }
+    // Then
+    assertTrue(result.isEmpty());
+  }
 }
