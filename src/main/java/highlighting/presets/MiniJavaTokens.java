@@ -26,7 +26,7 @@ public final class MiniJavaTokens {
         // One character between ' and '
         Token.of(
             Pattern.compile("'(?:\\\\.|[^'\\\\\\r\\n])'"), MiniJavaColours.CHAR_LITERAL_COLOUR),
-        // Keywords not as part of other identifiers or comments only from group 2
+        // Keywords not as part of other identifiers or comments
         Token.of(
             Pattern.compile(
                 "\\b(package|import|class|public|private|final|return|null|new|if|else|this)\\b"),
@@ -36,7 +36,7 @@ public final class MiniJavaTokens {
         // Single-line comments
         Token.of(Pattern.compile("//[^\\r\\n]*"), MiniJavaColours.LINE_COMMENT_COLOUR),
         // Multi-line comments
-        Token.of(Pattern.compile("/\\*(.|[\\r\\n])*?\\*/"), MiniJavaColours.BLOCK_COMMENT_COLOUR),
+        Token.of(Pattern.compile("/\\*(?!\\*)[\\s\\S]*?\\*/"), MiniJavaColours.BLOCK_COMMENT_COLOUR),
         // Javadoc comments
         Token.of(Pattern.compile("/\\*\\*[\\s\\S]*?\\*/"), MiniJavaColours.JAVADOC_COMMENT_COLOUR),
         // Match every other character
